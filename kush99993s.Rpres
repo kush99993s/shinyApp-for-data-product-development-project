@@ -1,0 +1,90 @@
+Cousera Data Product Presentation
+========================================================
+author: kush99993s
+date: 22nd March, 2015
+
+OverView
+========================================================
+
+- The shiny app for this project displays emissions summarized by fips codes at a US county level. To use the app
+- data is used is availbe in **https://archive.ics.uci.edu/ml/datasets/Auto+MPG**
+- use general linerar regression to predict MPG
+- Acorrding to MPG, Car is suggested
+- According to cylinder, horsepower, car weight selection, different car is suggested
+
+Loading and cleaning data
+========================================================
+
+```{r, echo=FALSE}
+mpg <- read.csv('C:/Users/Patanjali/Documents/data/DataProduct/project/car1.csv', 
+                na.strings = "?")
+mpg<-mpg[!is.na(mpg[,4]),]
+mpg<- mpg[,c(1,2,4,5,7,9)]
+colnames(mpg)<- c("mpg", "cylinder","horsepower", "weight", "year", "name")
+```
+
+```{r, echo=FALSE}
+str(mpg)
+```
+
+Machine Learning
+========================================================
+
+```{r, echo=FALSE}
+library(RCurl)
+library(caret)
+modFit <- train(mpg ~ horsepower + cylinder + weight + year , method="glm", data=mpg)
+```
+```{r, echo=FALSE}
+modFit$finalModel
+```
+
+Creating funciton to predict MPG & uploading
+========================================================
+```{r, echo=FALSE}
+prediction<- function(cylinder=3,
+                      horsepower=100,weight=3000,
+                      year=78){
+    selections<- as.data.frame(cbind(as.integer(cylinder),as.integer(horsepower),
+                                     as.integer(weight), as.integer(year)))
+    colnames(selections)<- c("cylinder","horsepower","weight", "year")
+    predictionResults<-predict(modFit, newdata=selections)
+    predictionResults
+}
+
+findCar<- function(cylinder=3,
+                      horsepower=100,weight=3000,
+                      year=78){
+    
+    x<-mpg[mpg[,"cylinder"]==as.integer(cylinder),] 
+    y<- x[which.min(abs(x[,"horsepower"]-as.integer(horsepower))),]
+    z<- y[which.min(abs(y[,"weight"]-as.integer(weight))),]
+    z[,1:5]
+}
+findName<- function(cylinder=3,
+                      horsepower=100,weight=3000,
+                      year=78){
+    
+    x<-mpg[mpg[,"cylinder"]==as.integer(cylinder),] 
+    y<- x[which.min(abs(x[,"horsepower"]-as.integer(horsepower))),]
+    z<- y[which.min(abs(y[,"weight"]-as.integer(weight))),]
+    z[,6]
+}
+```
+
+```{r,echo=FALSE}
+print("MPG of your dream Car")
+prediction(cylinder=3,horsepower=100,
+           weight=3000,year=78)
+```
+
+```{r,echo=FALSE, split=TRUE}
+print("our suggested car is")
+findCar(cylinder=3,horsepower=100,
+           weight=3000)
+findName(cylinder=3,horsepower=100,
+           weight=3000)
+```
+
+-Once app is developed and tested
+- app is deloped to shiny using deployApp() commond
